@@ -1,3 +1,5 @@
+// more code here
+
 var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
@@ -23,24 +25,24 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
 
-app.get('/', 
+app.get('/',
 function(req, res) {
-  res.render('index');
+  res.render('login');  // changed from index
 });
 
-app.get('/create', 
+app.get('/create', // can add a parameter here: utils.checkUser
 function(req, res) {
-  res.render('index');
+  res.render('login');  // changed from index
 });
 
-app.get('/links', 
+app.get('/links',
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
 });
 
-app.post('/links', 
+app.post('/links',
 function(req, res) {
   var uri = req.body.url;
 
@@ -78,6 +80,31 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+app.get('/login', function(req,res){
+
+});
+
+app.get('/signup', function(req,res) {
+
+});
+
+app.post('/login', function(req.res) {
+  var username = req.body.username;
+  var password = req.body.password;
+
+  new User ({username: username}).fetch().then(function(user){
+    if (!user) //if no
+      res.redirect('/login')
+    // if yes
+    bcrypt.comparePassword(params, function(match){
+      if (match)
+        createSession (request, response, user) // need to createSession function
+        res.redirect('/links')
+      else
+        res.redirect('/login');
+    })
+  })
+});
 
 
 /************************************************************/
@@ -109,4 +136,5 @@ app.get('/*', function(req, res) {
 });
 
 console.log('Shortly is listening on 4568');
+
 app.listen(4568);
