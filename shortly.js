@@ -25,20 +25,17 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
-// Somewhere initialize database using bcrypt(?) if necessary
-// Add database to .gitignore
-
 // Login required for homepage and create and links
   // if no session go to login 
 
 app.get('/', util.checkUser,
 function(req, res) {
-  res.render('index');  // changed from index
+  res.render('index');
 });
 
-app.get('/create', util.checkUser, // can add a parameter here: utils.checkUser
+app.get('/create', util.checkUser,
 function(req, res) {
-  res.render('index');  // changed from index
+  res.render('index');
 });
 
 app.get('/links', util.checkUser,
@@ -104,7 +101,8 @@ app.post('/login', function(req,res) {
     }
     else {
       // password has to be salted and hashed, and compare to password field in db
-      bcrypt.compare(password, user.get('hash'), function(err, match){ //TODO: FIX
+      // compare does salt and hash automatically
+      bcrypt.compare(password, user.get('hash'), function(err, match){
         if (match) {
           util.createSession (req, res, user); // need to createSession function
           res.redirect('/');
@@ -126,10 +124,10 @@ app.post('/signup', function(req,res) {
       if (user) {
         res.send("<script type='text/javascript'>alert('Username Taken!');window.location.href = '/signup';</script>");
       } else {
-        // password has to be salted and hashed, and compare to password field in db
+        // password has to be salted and hashed and stored
         bcrypt.genSalt(10, function(err, salt) {
           bcrypt.hash(password, salt, null, function(err, hash) {
-            var newUser = new User({username:username, hash:hash, salt:salt});
+            var newUser = new User({username:username, hash:hash});
             newUser.save().then(function(myUser) {
               Users.add(myUser);
               util.createSession(req, res, newUser);

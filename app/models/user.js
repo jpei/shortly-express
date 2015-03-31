@@ -8,7 +8,6 @@ var User = db.Model.extend({
 
   initialize: function(params) {
     params && params.hash && this.set('hash', params.hash);
-    params && params.salt && this.set('salt', params.salt);
   }
 });
 
