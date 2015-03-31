@@ -4,6 +4,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var bcrypt = require('bcrypt-nodejs');
 
 
 var db = require('./app/config');
@@ -24,25 +25,30 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
+// Somewhere initialize database using bcrypt(?) if necessary
+// Add database to .gitignore
 
-app.get('/',
+// Login required for homepage and create and links
+  // if no session go to login 
+
+app.get('/', util.checkUser,
 function(req, res) {
-  res.render('login');  // changed from index
+  res.render('index');  // changed from index
 });
 
-app.get('/create', // can add a parameter here: utils.checkUser
+app.get('/create', util.checkUser, // can add a parameter here: utils.checkUser
 function(req, res) {
-  res.render('login');  // changed from index
+  res.render('index');  // changed from index
 });
 
-app.get('/links',
+app.get('/links', util.checkUser,
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
 });
 
-app.post('/links',
+app.post('/links', util.checkUser,
 function(req, res) {
   var uri = req.body.url;
 
@@ -81,29 +87,65 @@ function(req, res) {
 /************************************************************/
 
 app.get('/login', function(req,res){
-
+  res.render('login'); 
 });
 
 app.get('/signup', function(req,res) {
-
+  res.render('signup');
 });
 
-app.post('/login', function(req.res) {
+app.post('/login', function(req,res) {
   var username = req.body.username;
   var password = req.body.password;
 
   new User ({username: username}).fetch().then(function(user){
-    if (!user) //if no
-      res.redirect('/login')
-    // if yes
-    bcrypt.comparePassword(params, function(match){
-      if (match)
-        createSession (request, response, user) // need to createSession function
-        res.redirect('/links')
-      else
-        res.redirect('/login');
-    })
-  })
+    if (!user) {
+      res.redirect('/login');
+    }
+    else {
+      // password has to be salted and hashed, and compare to password field in db
+      bcrypt.hash(password, user.get('salt'), null, function(err, hash) {
+        bcrypt.compare(user.get('hash'), hash, function(err, match){ //TODO: FIX
+          console.log("hash: ", hash);
+          console.log("usergethash: ", user.get('hash'));
+          if (match) {
+            util.createSession (req, res, user); // need to createSession function
+            console.log('Passwords do match');
+            res.redirect('/');
+          } else {
+            console.log('Passwords don\'t match');
+            res.redirect('/login');       
+          }
+        });
+      })
+    } 
+  });
+});
+
+app.post('/signup', function(req,res) {
+  var username = req.body.username;
+  var password = req.body.password;
+  if (password.length < 5) {
+    res.send("<script type='text/javascript'>alert('Password must be at least 5 characters!');window.location.href = '/signup';</script>");
+  } else {
+    new User ({username: username}).fetch().then(function(user){
+      if (user) {
+        res.send("<script type='text/javascript'>alert('Username Taken!');window.location.href = '/signup';</script>");
+      } else {
+        // password has to be salted and hashed, and compare to password field in db
+        bcrypt.genSalt(10, function(err, salt) {
+          bcrypt.hash(password, salt, null, function(err, hash) {
+            var newUser = new User({username:username, hash:hash, salt:salt});
+            newUser.save().then(function(myUser) {
+              Users.add(myUser);
+              util.createSession(req, res, newUser);
+              res.redirect('/');
+            });
+          })
+        })
+      } 
+    });
+  }
 });
 
 

@@ -8,6 +8,7 @@ var Link = db.Model.extend({
   defaults: {
     visits: 0
   },
+  
   clicks: function() {
     return this.hasMany(Click);
   },
