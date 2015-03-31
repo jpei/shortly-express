@@ -5,6 +5,7 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var bcrypt = require('bcrypt-nodejs');
+var cookieParser = require('cookie-parser');
 
 
 var db = require('./app/config');
@@ -23,6 +24,7 @@ app.use(partials());
 app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.use(express.static(__dirname + '/public'));
 
 // Login required for homepage and create and links
@@ -105,7 +107,6 @@ app.post('/login', function(req,res) {
       bcrypt.compare(password, user.get('hash'), function(err, match){
         if (match) {
           util.createSession (req, res, user); // need to createSession function
-          res.redirect('/');
         } else {
           res.redirect('/login');       
         }
@@ -131,7 +132,6 @@ app.post('/signup', function(req,res) {
             newUser.save().then(function(myUser) {
               Users.add(myUser);
               util.createSession(req, res, newUser);
-              res.redirect('/');
             });
           })
         })

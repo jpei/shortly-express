@@ -8,6 +8,10 @@ var User = db.Model.extend({
 
   initialize: function(params) {
     params && params.hash && this.set('hash', params.hash);
+  },
+
+  sessions: function() {
+    return this.hasMany(Session);
   }
 });
 

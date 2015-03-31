@@ -56,6 +56,22 @@ db.knex.schema.hasTable('users').then(function(exists) {
       console.log('Created User Table', table);
     });
   }
-});      
+});
+
+db.knex.schema.hasTable('sessions').then(function(exists) {
+  if (!exists) {
+    db.knex.schema.createTable('sessions', function (session) {
+      session.increments('id').primary();
+
+      // may or may not be a foreign key
+      session.integer('user_id').unsigned().notNullable().references('id').inTable('users');
+      
+      session.string('token', 255);
+      session.timestamps();
+    }).then(function (table) {
+      console.log('Created Sessions Table', table);
+    });
+  }
+});
 
 module.exports = db;
