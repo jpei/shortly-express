@@ -104,20 +104,14 @@ app.post('/login', function(req,res) {
     }
     else {
       // password has to be salted and hashed, and compare to password field in db
-      bcrypt.hash(password, user.get('salt'), null, function(err, hash) {
-        bcrypt.compare(user.get('hash'), hash, function(err, match){ //TODO: FIX
-          console.log("hash: ", hash);
-          console.log("usergethash: ", user.get('hash'));
-          if (match) {
-            util.createSession (req, res, user); // need to createSession function
-            console.log('Passwords do match');
-            res.redirect('/');
-          } else {
-            console.log('Passwords don\'t match');
-            res.redirect('/login');       
-          }
-        });
-      })
+      bcrypt.compare(password, user.get('hash'), function(err, match){ //TODO: FIX
+        if (match) {
+          util.createSession (req, res, user); // need to createSession function
+          res.redirect('/');
+        } else {
+          res.redirect('/login');       
+        }
+      });
     } 
   });
 });
