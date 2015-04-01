@@ -7,11 +7,20 @@ var User = db.Model.extend({
   hasTimestamps: true,
 
   initialize: function(params) {
+    params && params.hash && this.set('hash', params.hash);
     params && params.password && this.set('password', params.password);
+    this.on('creating', this.hashPassword);
   },
 
-  sessions: function() {
-    return this.hasMany(Session);
+  hashPassword: function(){
+    if (this.get('password')) {
+      var cipher = Promise.promisify(bcrypt.hash);
+      return cipher(this.get('password'), null, null).bind(this)
+        .then(function(hash) {
+          this.set('hash', hash);
+          this.unset('password');
+        });
+    }
   }
 });
 

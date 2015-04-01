@@ -89,16 +89,16 @@ app.post('/login', function(req,res) {
 
   new User ({username: username}).fetch().then(function(user){
     if (!user) {
-      res.redirect('/login');
+      util.alertUser(res, 'Invalid User', '/login');
     }
     else {
       // password has to be salted and hashed, and compare to password field in db
       // compare does salt and hash automatically
-      bcrypt.compare(password, user.get('password'), function(err, match){
+      bcrypt.compare(password, user.get('hash'), function(err, match){
         if (match) {
           util.createSession (req, res, user); // need to createSession function
         } else {
-          res.redirect('/login');
+          util.alertUser(res, 'Invalid Password!', '/login');
         }
       });
     } 
@@ -118,17 +118,17 @@ app.get('/signup', function(req,res) {
 app.post('/signup', function(req,res) {
   var username = req.body.username;
   var password = req.body.password;
-  if (password.length < 5) {
-    res.send("<script type='text/javascript'>alert('Password must be at least 5 characters!');window.location.href = '/signup';</script>");
+  if (password.length < 4) {
+    util.alertUser(res, 'Password must be at least 4 characters!', '/signup');
   } else {
     new User ({username: username}).fetch().then(function(user){
       if (user) {
-        res.send("<script type='text/javascript'>alert('Username Taken!');window.location.href = '/signup';</script>");
+        util.alertUser(res, 'Username Taken!', '/signup');
       } else {
         // password has to be salted and hashed and stored
         bcrypt.genSalt(10, function(err, salt) {
-          bcrypt.hash(password, salt, null, function(err, password) {
-            var newUser = new User({username:username, password:password});
+          bcrypt.hash(password, salt, null, function(err, hash) {
+            var newUser = new User({username:username, hash:hash});
             newUser.save().then(function(myUser) {
               Users.add(myUser);
               util.createSession(req, res, newUser);
@@ -139,7 +139,6 @@ app.post('/signup', function(req,res) {
     });
   }
 });
-
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
