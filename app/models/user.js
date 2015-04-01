@@ -7,7 +7,7 @@ var User = db.Model.extend({
   hasTimestamps: true,
 
   initialize: function(params) {
-    params && params.hash && this.set('hash', params.hash);
+    params && params.password && this.set('password', params.password);
   },
 
   sessions: function() {
